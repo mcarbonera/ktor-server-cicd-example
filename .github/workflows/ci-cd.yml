@@ -54,10 +54,14 @@ jobs:
           echo "${{ secrets.KUBECONFIG_FILE }}" | base64 -d > kubeconfig.yaml
           export KUBECONFIG=$PWD/kubeconfig.yaml
 
+      - name: Create namespace
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+
       - name: Create or update Kubernetes secret
         run: |
-          chmod +x ./scripts/create-k8s-secret.sh
-          ./scripts/create-k8s-secret.sh
+          chmod +x ./scripts/deploy.sh
+          ./scripts/deploy.sh
 
       - name: Deploy to Kubernetes
         run: |
