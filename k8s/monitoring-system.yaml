@@ -87,7 +87,8 @@ spec:
       containers:
       - name: ktor-server
         image: mcarbonera/monitoring-system-ktor-server
-        imagePullPolicy: Never
+        # ADICIONAR ESSA LINHA SE A IMAGEM AINDA NAO ESTA NO DOCKERHUB:
+        #imagePullPolicy: Never
         ports:
         - containerPort: 8080
         envFrom:

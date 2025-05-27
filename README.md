@@ -1,6 +1,6 @@
 # monitoring-system
 
-Esse projeto contém um sistema com autenticação
+Esse projeto contém um sistema Ktor Server com autenticação.
 
 ## Rotas
 
@@ -69,7 +69,13 @@ No Docker Compose, há um parâmetro env_file para injetar as variáveis. No cas
 
 A etapa de gerar o secret deve funcionar diferente dependendo de ser local ou produção, pois, localmente, temos o arquivo .env e em produção estas variáveis são injetadas pela esteira de CI/CD. Para funcionar de modo semelhante foi criado um shell script (deploy.sh, o nome está ruim, mas vou continuar assim no momento).
 
-Para rodar, deve-se fazer assim:
+Para rodar lembrar que, se a imagem não está no Docker Hub ainda, o manifesto deve conter "imagePullPolicy: Never" para o Deployment ktor-server. Gerar a imagem local com:
+
+```
+docker build -t mcarbonera/monitoring-system-ktor-server .
+```
+
+Subir a aplicação via Kubernetes com os seguintes comandos:
 
 - Criar o namespace:
 
@@ -89,8 +95,43 @@ kubectl apply -f k8s/namespace.yaml
 kubectl apply -f k8s/monitoring-system.yaml
 ```
 
-- Tá pronto o sorvetinho.
-
 ## Criação da esteira CI/CD
 
-TO BE CONTINUED
+### CI
+
+Para a parte de CI, foi necessário criar alguns secrets para utilização na esteira, mostradas a seguir:
+
+#### Para publicar no dockerhub:
+
+- DOCKERHUB_USERNAME
+- DOCKERHUB_PASSWORD
+
+#### Para a aplicação ktor-server:
+
+- JWT_ACCESS_SECRET
+- JWT_REFRESH_SECRET
+- JWT_ISSUER
+- JWT_AUDIENCE
+- JWT_ACCESS_EXPIRATION
+- JWT_REFRESH_EXPIRATION
+- JWT_REALM
+- DB_URL
+- DB_USERNAME
+- DB_PASSWORD
+- DB_DRIVER
+
+### CD
+
+Para a parte de CD, foi necessário configurar o acesso do job de deploy ao cluster Kubernetes. Para isso, acessar o WSL (no linux fica mais fácil), rodar o comando:
+
+```
+base64 ~/.kube/config > kubeconfig.base64
+cat kubeconfig.base64
+```
+
+Copiar o valor em base64 e criar um secret no github:
+
+```
+Chave: KUBECONFIG_FILE
+Valor : <<conteudo do .kube/config em base64>>
+```
