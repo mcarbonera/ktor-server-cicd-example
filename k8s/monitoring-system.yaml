@@ -1,0 +1,108 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring-system-ktor-server
+---
+# MARK: PostgreSQL
+# Volume para os dados
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: monitoring-system-ktor-server
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+# Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: monitoring-system-ktor-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:latest
+        env:
+        - name: POSTGRES_DB
+          value: "evennt"
+        - name: POSTGRES_USER
+          value: "postgres"
+        - name: POSTGRES_PASSWORD
+          value: "postgres"
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+---
+# Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: monitoring-system-ktor-server
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres
+  ports:
+  - port: 5432
+    targetPort: 5432
+---
+# MARK: Ktor Server - Monitoring System
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ktor-server
+  namespace: monitoring-system-ktor-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ktor-server
+  template:
+    metadata:
+      labels:
+        app: ktor-server
+    spec:
+      containers:
+      - name: ktor-server
+        image: mcarbonera/monitoring-system-ktor-server
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - secretRef:
+            name: app-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ktor-server
+  namespace: monitoring-system-ktor-server
+spec:
+  type: LoadBalancer
+  selector:
+    app: ktor-server
+  ports:
+  - port: 8080
+    targetPort: 8080
