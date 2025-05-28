@@ -51,14 +51,17 @@ jobs:
 
       - name: Set up Kubeconfig
         run: |
-          echo "${{ secrets.KUBECONFIG_FILE }}" | base64 -d > kubeconfig.yaml
+          echo "$KUBECONFIG_FILE" | base64 -d > kubeconfig.yaml
           export KUBECONFIG=$PWD/kubeconfig.yaml
           kubectl config get-contexts
+        env:
+          KUBECONFIG_FILE: ${{ secrets.KUBECONFIG_FILE }}
 
       - name: Create namespace
         run: |
           export KUBECONFIG=$PWD/kubeconfig.yaml
           kubectl apply -f k8s/namespace.yaml
+
 
       - name: Create or update Kubernetes secret
         run: |
