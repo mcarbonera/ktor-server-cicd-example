@@ -31,7 +31,7 @@ jobs:
 
   deploy:
     name: Deploy to Kubernetes
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs:
       - publish-ktor-server
     env:
@@ -49,27 +49,41 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Kubeconfig
-        run: |
-          echo "$KUBECONFIG_FILE" | base64 -d > kubeconfig.yaml
-          export KUBECONFIG=$PWD/kubeconfig.yaml
-          kubectl config get-contexts
-        env:
-          KUBECONFIG_FILE: ${{ secrets.KUBECONFIG_FILE }}
+      #- name: Set up Kubeconfig
+      #  run: |
+      #    echo "$KUBECONFIG_FILE" | base64 -d > kubeconfig.yaml
+      #    export KUBECONFIG=$PWD/kubeconfig.yaml
+      #    kubectl config get-contexts
+      #  env:
+      #    KUBECONFIG_FILE: ${{ secrets.KUBECONFIG_FILE }}
+
+      #- name: Create namespace
+      #  run: |
+      #    export KUBECONFIG=$PWD/kubeconfig.yaml
+      #    kubectl apply -f k8s/namespace.yaml
+
+
+      #- name: Create or update Kubernetes secret
+      #  run: |
+      #    export KUBECONFIG=$PWD/kubeconfig.yaml
+      #    chmod +x ./scripts/deploy.sh
+      #    ./scripts/deploy.sh
+
+      #- name: Deploy to Kubernetes
+      #  run: |
+      #    export KUBECONFIG=$PWD/kubeconfig.yaml
+      #    kubectl apply -f k8s/monitoring-system.yaml
 
       - name: Create namespace
         run: |
-          export KUBECONFIG=$PWD/kubeconfig.yaml
           kubectl apply -f k8s/namespace.yaml
-
-
+      
       - name: Create or update Kubernetes secret
         run: |
-          export KUBECONFIG=$PWD/kubeconfig.yaml
           chmod +x ./scripts/deploy.sh
           ./scripts/deploy.sh
-
+          #- name: Deploy to Kubernetes
+      
       - name: Deploy to Kubernetes
         run: |
-          export KUBECONFIG=$PWD/kubeconfig.yaml
           kubectl apply -f k8s/monitoring-system.yaml
