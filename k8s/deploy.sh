@@ -12,8 +12,9 @@ if [ -f .env ]; then
   VARS=$(grep -v '^#' .env | cut -d= -f1)
 else
   echo "💡 No .env file found — assuming CI/CD environment"
-  # Define the variable names that should be passed (hardcoded list)
-  VARS="DB_USER DB_PASS API_KEY"
+  VARS="JWT_ACCESS_SECRET JWT_REFRESH_SECRET JWT_ISSUER \
+  JWT_AUDIENCE JWT_ACCESS_EXPIRATION JWT_REFRESH_EXPIRATION \
+  JWT_REALM DB_URL DB_USERNAME DB_PASSWORD DB_DRIVER"
 fi
 
 # Build --from-literal args dynamically
@@ -21,7 +22,7 @@ LITERALS=""
 for VAR in $VARS; do
   VALUE="${!VAR}"
   if [ -z "$VALUE" ]; then
-    echo "⚠️  Warning: $VAR is not set, skipping"
+    echo "⚠️ Warning: $VAR is not set, skipping"
     continue
   fi
   LITERALS+=" --from-literal=$VAR=$VALUE"

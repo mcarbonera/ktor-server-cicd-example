@@ -122,6 +122,79 @@ Para a parte de CI, foi necessário criar alguns secrets para utilização na es
 
 ### CD
 
+- Foi necessário criar um runner local a afim de permitir à task acessar o comando kubectl do cluster.
+
+- Para criar, no github, acessar Configuração -> Actions -> Runners -> New Runner -> New self-hosted runner. Selecionar:
+
+```
+Runner image: Linux
+Architecture: x64
+```
+
+- A página do github vai exibir instruções de como rodar o runner localmente. Acessar o windows WSL (cmd -> comando "wsl" no terminal) e rodar os comandos.
+
+- No arquivo que define o pipeline (ci-cd.yml), o job que vai rodar localmente deve ter a configuração "runs-on: self-hosted"
+
+
+
+
+
+
+
+
+<<<<< ISSO AQUI NAO ROLOU >>>>
+
+- Para permitir que o job de deploy acesse o cluster Kubernetes, utilizei FluxCD (escolhido por ter abordagem parecida com a configuração de um agente Gitlab).
+
+- Adicionar o fluxcd:
+
+```
+helm repo add fluxcd https://fluxcd-community.github.io/helm-charts
+helm repo update
+
+helm install flux fluxcd/flux2 \
+  --namespace flux-system \
+  --create-namespace
+```
+
+Gerar a chave criptográfica usada para deploy.
+
+```
+ssh-keygen -t ed25519 -C "flux" -f ./flux-github-key -N ""
+```
+
+- Salvar como um secret kubernetes (a chave privada é nossa, a pública é deles).
+
+```
+kubectl create secret generic flux-git-deploy-key \
+  --namespace flux-system \
+  --from-file=identity=./flux-github-key
+```
+
+- Para o github ter acesso à chave pública, acessar Settings -> Deploy keys -> Add deploy key
+
+```
+Nome: flux
+Conteúdo: o que estiver dentro de "flux-github-key.pub"
+Allow write access: TRUE!!!!
+```
+
+- Foi criado o arquivo flux-sync.yaml e sua configuração aplicada com:
+
+```
+kubectl apply -f k8s/flux-sync.yaml
+```
+
+
+
+
+
+
+
+
+
+<<<<< PARECE QUE ISSO AQUI NAO DEU CERTO NAO, MEU PARCEIRO >>>>
+
 Para a parte de CD, foi necessário configurar o acesso do job de deploy ao cluster Kubernetes. Para isso, acessar o WSL (no linux fica mais fácil), rodar o comando:
 
 ```
