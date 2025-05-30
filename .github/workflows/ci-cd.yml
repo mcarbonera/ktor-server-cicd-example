@@ -55,6 +55,7 @@ jobs:
       
       - name: Criar o secret
         run: |
+          chmod +x ./k8s/deploy.sh
           ./k8s/deploy.sh
 
       - name: Deploy to Kubernetes
